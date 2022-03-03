@@ -1,0 +1,1 @@
+This repo shows a way to manage diamond dependancies with object libraries with cmake (from 3.21 only)

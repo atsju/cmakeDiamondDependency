@@ -1,0 +1,80 @@
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY" )
+set(CMAKE_SYSTEM_NAME Generic)
+
+find_program(GNU_ARM_SIZE_TOOL arm-none-eabi-size)
+
+find_program(KWWRAP_TOOL kwwrap)
+
+if(NOT GNU_ARM_SIZE_TOOL)
+    message("arm-none-eabi-size.exe has not been found")
+endif()
+
+if(NOT KWWRAP_TOOL)
+     message("Klocwork seems not to be installed on this computer")
+endif()
+
+# linker flags
+set(CMAKE_EXE_LINKER_FLAGS "-gdwarf-2 -mcpu=cortex-m4 -mthumb \
+    -Xlinker --gc-sections -Xlinker -Map=\"output.map\" -mfpu=fpv4-sp-d16 -mfloat-abi=softfp --specs=nano.specs -Wl,--trace-symbol=aWeakFunction")
+
+# Set minimum CMake version
+cmake_minimum_required(VERSION 3.21)
+
+##### Project Setup #####
+
+# Set our output target
+set(TARGET helloWorld)
+
+# Configure project and languages
+project(${TARGET} C CXX ASM)
+
+
+add_library(C__ OBJECT EXCLUDE_FROM_ALL)
+target_sources(C__ PRIVATE C/c.c)
+target_include_directories(C__ PUBLIC C)
+
+
+
+add_library(B1__ OBJECT EXCLUDE_FROM_ALL)
+#add_library(B1__ STATIC EXCLUDE_FROM_ALL)
+target_sources(B1__ PRIVATE B1/b1.c)
+target_include_directories(B1__ PUBLIC B1)
+target_link_libraries(B1__ PUBLIC  $<TARGET_OBJECTS:C__> C__)
+#target_link_libraries(B1__ PUBLIC C__)
+
+add_library(B2__ OBJECT EXCLUDE_FROM_ALL)
+#add_library(B2__ STATIC EXCLUDE_FROM_ALL)
+target_sources(B2__ PRIVATE B2/b2.c)
+target_include_directories(B2__ PUBLIC B2)
+target_link_libraries(B2__ PUBLIC  $<TARGET_OBJECTS:C__> C__)
+#target_link_libraries(B2__ PUBLIC C__)
+
+
+
+
+add_executable(${TARGET}.axf    A/a.c
+                                syscallsGCC.c)
+target_include_directories(${TARGET}.axf PUBLIC A)
+target_link_libraries(${TARGET}.axf PUBLIC  B1__
+                                            B2__)
+
+
+
+
+
+
+
+ADD_CUSTOM_COMMAND(TARGET ${TARGET}.hex POST_BUILD ${TARGET}.axf COMMAND ${CMAKE_OBJCOPY} --verbose -Oihex ${TARGET}.axf ${TARGET}.hex)
+ADD_CUSTOM_COMMAND(TARGET ${TARGET}.bin POST_BUILD ${TARGET}.axf COMMAND ${CMAKE_OBJCOPY} --verbose -Obinary ${TARGET}.axf ${TARGET}.bin)
+
+ADD_CUSTOM_TARGET(do_always ALL
+        COMMAND ${CMAKE_COMMAND} -E echo ------------------------------------------------------------------------------
+        COMMAND ${GNU_ARM_SIZE_TOOL} -Ax ${TARGET}.axf
+        COMMAND ${GNU_ARM_SIZE_TOOL} ${TARGET}.axf
+        COMMAND ${CMAKE_COMMAND} -E echo
+        COMMAND ${CMAKE_COMMAND} -E echo Build configuration is ${CMAKE_BUILD_TYPE}
+        COMMAND ${CMAKE_COMMAND} -E echo PROJECT_SELECTOR is ${PROJECT_SELECTOR}
+        COMMAND ${CMAKE_COMMAND} -E echo ------------------------------------------------------------------------------
+        DEPENDS ${TARGET}.axf)

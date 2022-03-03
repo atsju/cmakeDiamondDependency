@@ -1,0 +1,16 @@
+{
+    "cmake.buildDirectory": "${workspaceRoot}/build_${buildType}",
+    //"cmake.copyCompileCommands": "${workspaceFolder}/compile_commands.json",
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    //"C_Cpp.default.compileCommands": "${workspaceFolder}/compile_commands.json",
+    "C_Cpp.default.intelliSenseMode": "gcc-arm",
+    "files.trimFinalNewlines": true,
+    "files.insertFinalNewline": true,
+    "files.trimTrailingWhitespace": true,
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "files.associations": {
+        "cmath": "cpp",
+        "*.tcc": "cpp"
+    },
+}
